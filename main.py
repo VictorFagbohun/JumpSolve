@@ -1,12 +1,13 @@
 import sys
 import pygame
+from settings import SETTINGS
 
 class Game:
     def __init__(self):
         pygame.init()
 
-        pygame.display.set_caption("JumpSolve")
-        self.screen = pygame.display.set_mode((800, 600))
+        pygame.display.set_caption(SETTINGS["TITLE"])
+        self.screen = pygame.display.set_mode((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]))
 
         self.clock = pygame.time.Clock()
     def run(self):
@@ -17,6 +18,6 @@ class Game:
                     sys.exit()
 
             pygame.display.update()
-            self.clock.tick(60) 
+            self.clock.tick(SETTINGS["FPS"]) 
 
 Game().run()
