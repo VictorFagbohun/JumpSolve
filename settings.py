@@ -4,3 +4,9 @@ SETTINGS = {
     "FPS": 60,          # Frames per second
     "TITLE": "JumpSolve",  # Game window title
 }
+
+PLAYER_SETTINGS = {
+    "SPEED": 5,
+    "JUMP_HEIGHT": 10,
+    "GRAVITY": 0.5,
+}
