@@ -22,6 +22,5 @@ class Game:
             
             pygame.display.update()
             self.clock.tick(SETTINGS["FPS"]) 
-            
-            
+
 Game().run()
