@@ -64,7 +64,6 @@ def menu_screen():
         screen.blit(difficulty_text,difficulty_rect)
     
         #Selection Display
-        #screen.blit(easy_selection,(160,125))
         pygame.draw.rect(screen,"blue",easy_selection)
         screen.blit(easy_text,easy_rect)
         
