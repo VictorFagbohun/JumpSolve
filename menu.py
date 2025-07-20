@@ -10,7 +10,7 @@ clock = pygame.time.Clock()
 
 word_font = pygame.font.Font(None,50)
 
-#Instructiosn for Menu. 
+#Instructions for Menu. 
 
 menu_text = word_font.render("Menu", False, "White")
 difficulty_text = word_font.render("Choose a Difficulty", False, "White")

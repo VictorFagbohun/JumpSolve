@@ -13,6 +13,7 @@ class Game:
         self.clock = pygame.time.Clock()
     def run(self):
         difficulty_selection = menu_screen()
+
         self.screen.fill("black")
         while True:
             for event in pygame.event.get():
