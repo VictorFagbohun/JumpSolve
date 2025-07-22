@@ -80,12 +80,13 @@ class Player(pygame.sprite.Sprite):
         self.direction = "left"
         self.animation_count = 0
         self.fall_count = 0
+        self.jump_count = 0
 
     def jump(self):
-        self.y_vel = -self.GRAVITY * 8
-        self.animation_count = 0
-        self.jump_count += 1
-        if self.jump_count == 1:
+        if self.jump_count == 0:
+            self.y_vel = -self.GRAVITY * 8
+            self.animation_count = 0
+            self.jump_count += 1
             self.fall_count = 0
 
     def move(self, dx, dy):
@@ -121,9 +122,12 @@ class Player(pygame.sprite.Sprite):
 
     def update_sprite(self):
         spritesheet = "Pink_Monster_Idle_4"
-        if self.x_vel != 0:
+        if self.y_vel < 0:
+            if self.jump_count == 1:
+                spritesheet = "Pink_Monster_Jump_8"
+        elif self.x_vel != 0:
             spritesheet = "Pink_Monster_Run_6"
-
+            
         spritesheetname = spritesheet + "_" + self.direction
         sprites = self.SPRITES[spritesheetname]
         spriteindex = (self.animation_count // self.ANIMATIONDELAY) % len(sprites)
