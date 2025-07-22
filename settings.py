@@ -8,7 +8,6 @@ SETTINGS = {
 PLAYER_SETTINGS = {
     "SPEED": 5,
     "JUMP_HEIGHT": 10,
-    "GRAVITY": 0.5,
 }
 
 GAME_SETTINGS = {
