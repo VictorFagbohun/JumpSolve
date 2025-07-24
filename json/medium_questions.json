@@ -1,0 +1,14 @@
+[
+  { "id": 1, "image": "QuestionBank/medium/q1.png", "answer": "C" },
+  { "id": 2, "image": "QuestionBank/medium/q2.png", "answer": "J" },
+  { "id": 3, "image": "QuestionBank/medium/q3.png", "answer": "H" },
+  { "id": 4, "image": "QuestionBank/medium/q4.png", "answer": "B" },
+  { "id": 5, "image": "QuestionBank/medium/q5.png", "answer": "G" },
+  { "id": 6, "image": "QuestionBank/medium/q6.png", "answer": "D" },
+  { "id": 7, "image": "QuestionBank/medium/q7.png", "answer": "G" },
+  { "id": 8, "image": "QuestionBank/medium/q8.png", "answer": "C" },
+  { "id": 9, "image": "QuestionBank/medium/q9.png", "answer": "C" },
+  { "id": 10, "image": "QuestionBank/medium/q10.png", "answer": "F" },
+  { "id": 11, "image": "QuestionBank/medium/q11.png", "answer": "C" },
+  { "id": 12, "image": "QuestionBank/medium/q12.png", "answer": "G" }
+]

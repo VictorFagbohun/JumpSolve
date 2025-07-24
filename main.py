@@ -216,6 +216,10 @@ def handle_movement(player, objects):
 
 def main(window):
     menu_screen()
+    # Start game music after menu
+    pygame.mixer.music.load("music/game.mp3")  # Use your exported EarSketch or other music file
+    pygame.mixer.music.play(-1)  # Loop the music
+
     clock = pygame.time.Clock()
     print(Player.SPRITES.keys())
     background, bg_image = get_background("Gray.png")
@@ -242,4 +246,4 @@ def main(window):
 
 if __name__ == "__main__":
     main(window)
-    
+

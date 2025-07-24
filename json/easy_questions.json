@@ -1,0 +1,14 @@
+[
+  { "id": 1, "image": "QuestionBank/easy/q1.png", "answer": "A" },
+  { "id": 2, "image": "QuestionBank/easy/q2.png", "answer": "D" },
+  { "id": 3, "image": "QuestionBank/easy/q3.png", "answer": "A" },
+  { "id": 4, "image": "QuestionBank/easy/q4.png", "answer": "C" },
+  { "id": 5, "image": "QuestionBank/easy/q5.png", "answer": "A" },
+  { "id": 6, "image": "QuestionBank/easy/q6.png", "answer": "C" },
+  { "id": 7, "image": "QuestionBank/easy/q7.png", "answer": "B" },
+  { "id": 8, "image": "QuestionBank/easy/q8.png", "answer": "B" },
+  { "id": 9, "image": "QuestionBank/easy/q9.png", "answer": "C" },
+  { "id": 10, "image": "QuestionBank/easy/q10.png", "answer": "A" },
+  { "id": 11, "image": "QuestionBank/easy/q11.png", "answer": "C" },
+  { "id": 12, "image": "QuestionBank/easy/q12.png", "answer": "B" }
+]
