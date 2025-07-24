@@ -15,9 +15,9 @@ pygame.display.set_caption('JumpSolve Menu')
 screen = pygame.display.set_mode((800,600))
 word_font = pygame.font.Font(None,50)
 clock = pygame.time.Clock()
-points = 0
 
 def questions(difficulty):
+    points = 0
     
     if difficulty == "Easy":
         question = easy_question
@@ -117,3 +117,4 @@ def questions(difficulty):
         pygame.display.update()
         clock.tick(60)
     
+questions("Easy")
