@@ -72,5 +72,3 @@ def questions(difficulty):
             screen.blit(img, [150, 0])
         pygame.display.update()
         clock.tick(60)
-
-questions("Medium")

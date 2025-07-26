@@ -5,7 +5,7 @@ import random
 import math
 from os import listdir
 from os.path import isfile, join
-from settings import PLAYER_SETTINGS, SETTINGS
+from settings import PLAYER_SETTINGS, SETTINGS, GAME_SETTINGS
 from menu import menu_screen
 from question import questions
  
@@ -81,10 +81,11 @@ class Player(pygame.sprite.Sprite):
         self.animation_count = 0
         self.fall_count = 0
         self.jump_count = 0
+        self.JUMP_POWER = PLAYER_SETTINGS["JUMP_HEIGHT"]
 
     def jump(self):
         if self.jump_count == 0:
-            self.y_vel = -self.GRAVITY * 8
+            self.y_vel = -self.JUMP_POWER
             self.animation_count = 0
             self.jump_count += 1
             self.fall_count = 0
@@ -141,8 +142,8 @@ class Player(pygame.sprite.Sprite):
 
 
 
-    def draw(self, win):
-        win.blit(self.sprite, (self.rect.x, self.rect.y))
+    def draw(self, win, offset_x, offset_y):
+        win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 
 class Object(pygame.sprite.Sprite):
@@ -154,8 +155,8 @@ class Object(pygame.sprite.Sprite):
         self.height = height
         self.name = name
 
-    def draw(self, win):
-        win.blit(self.image, (self.rect.x, self.rect.y))
+    def draw(self, win, offset_x, offset_y):
+        win.blit(self.image, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 class Block(Object):
     def __init__(self,x,y,size):
@@ -176,14 +177,14 @@ def get_background(name):
     return tiles, image
     
 
-def draw(window, background, bg_image,player, objects):
+def draw(window, background, bg_image,player, objects, offset_x, offset_y):
     for tile in background:
         window.blit(bg_image, tile)
 
     for obj in objects:
-        obj.draw(window)
+        obj.draw(window, offset_x, offset_y)
 
-    player.draw(window)
+    player.draw(window, offset_x, offset_y)
 
     pygame.display.update()
 
@@ -201,13 +202,29 @@ def handle_vertical_collision(player, objects, dy):
         collidedobjects.append(obj)
     return collidedobjects
 
+def collide(player, objects, dx):
+    player.move(dx, 0)
+    player.update()
+    collided_object = None
+    for obj in objects:
+        if pygame.sprite.collide_mask(player, obj):
+            collided_object = obj
+            break
+
+    player.move(-dx, 0)
+    player.update()
+    return collided_object
+
+
 def handle_movement(player, objects):
     keys = pygame.key.get_pressed()
     player.x_vel = 0
+    collide_left = collide(player, objects, -PLAYER_SETTINGS["SPEED"] * 2)
+    collide_right = collide(player, objects, PLAYER_SETTINGS["SPEED"] * 2)
 
-    if keys[pygame.K_a]:
+    if keys[pygame.K_a] and not collide_left:
         player.move_left(PLAYER_SETTINGS["SPEED"])
-    elif keys[pygame.K_d]:
+    elif keys[pygame.K_d] and not collide_right:
         player.move_right(PLAYER_SETTINGS["SPEED"])
 
     handle_vertical_collision(player, objects, player.y_vel)
@@ -215,35 +232,170 @@ def handle_movement(player, objects):
     
 
 def main(window):
-    menu_screen()
-    # Start game music after menu
-    pygame.mixer.music.load("music/game.mp3")  # Use your exported EarSketch or other music file
-    pygame.mixer.music.play(-1)  # Loop the music
+    # Get difficulty from menu
+    difficulty = menu_screen()
+    
+    # Supercharged difficulty settings with exponential jump scaling
+    DIFFICULTY_SETTINGS = {
+        "Easy": {
+            "gap_increase": 16,
+            "base_jump": 3.0,  # Strong initial jump
+            "jump_multiplier": 1.25,  # 25% increase per upgrade
+            "question_diff": "Easy",
+            "gravity": 0.7,  # Very floaty
+            "max_jump_upgrades": 10  # Cap to prevent absurd jumps
+        },
+        "Medium": {
+            "gap_increase": 24,
+            "base_jump": 2.5,
+            "jump_multiplier": 1.2,  # 20% increase
+            "question_diff": "Medium",
+            "gravity": 0.9,
+            "max_jump_upgrades": 12
+        },
+        "Hard": {
+            "gap_increase": 32,
+            "base_jump": 2.0,
+            "jump_multiplier": 1.15,  # 15% increase
+            "question_diff": "Hard", 
+            "gravity": 1.1,
+            "max_jump_upgrades": 15
+        }
+    }
+    settings = DIFFICULTY_SETTINGS[difficulty]
+
+    # Game initialization
+    pygame.mixer.music.load("music/game.mp3")
+    pygame.mixer.music.play(-1)
 
     clock = pygame.time.Clock()
-    print(Player.SPRITES.keys())
     background, bg_image = get_background("Gray.png")
 
-    block_size = 96
+    block_size = 64
+    objects = []
+    start_x = 100
+    start_y = SETTINGS["HEIGHT"] - block_size * 2
+    current_gap = block_size * 2
+    question_every = 3
 
-    player = Player(100,100,64,64)
-    floor = [Block(i * block_size, SETTINGS["HEIGHT"] - block_size, block_size) for i in range(-SETTINGS["WIDTH"] // block_size, SETTINGS["WIDTH"] * 2 // block_size)]
+    # Generate platforms with exponential gap scaling
+    for i in range(GAME_SETTINGS[difficulty]):
+        if i > 0 and i % question_every == 0:
+            # Exponential gap growth
+            current_gap *= 1.15  # 15% wider each question platform
+            current_gap += settings["gap_increase"]  # Plus flat increase
+            
+        x = start_x + i * current_gap
+        y = start_y - i * (block_size * 0.8)
+        objects.append(Block(x, y, block_size))
+
+    # Player setup with supercharged jump system
+    first_platform = objects[0]
+    player = Player(
+        first_platform.rect.x + (first_platform.width // 2) - 32,
+        first_platform.rect.y - 64,
+        64, 64
+    )
+    player.GRAVITY = settings["gravity"]
+    player.JUMP_POWER = settings["base_jump"]
+    jump_upgrades = 0
+    
+    # Game state
+    offset_x = 0
+    offset_y = 0
+    scroll_area_width = SETTINGS["WIDTH"] // 3  # More responsive camera
+    scroll_area_height = SETTINGS["HEIGHT"] // 3
+    death_threshold = SETTINGS["HEIGHT"] + 300  # More forgiving death boundary
+    game_over = False
+    question_active = False
+    next_question_idx = question_every
 
     while True:
         clock.tick(SETTINGS["FPS"])
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and not game_over and not question_active:
                     player.jump()
+                if event.key == pygame.K_r and game_over:
+                    return main(window)
         
-        player.loop(SETTINGS["FPS"])
-        handle_movement(player, floor)
-        draw(window, background, bg_image, player, floor)
+        if not game_over:
+            if not question_active:
+                player.loop(SETTINGS["FPS"])
+                handle_movement(player, objects)
+                
+                # Check platform collisions
+                for i, platform in enumerate(objects):
+                    if (player.rect.colliderect(pygame.Rect(
+                        platform.rect.x, platform.rect.y - 10, 
+                        platform.rect.width, 15))):
+                        
+                        if i >= next_question_idx:
+                            question_active = True
+                            next_question_idx += question_every
+                            
+                            # Supercharged jump upgrade system
+                            answered_correctly = questions(settings["question_diff"])
+                            if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
+                                jump_upgrades += 1
+                                # Exponential jump scaling
+                                player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
+                                
+                                # Visual feedback
+                                font = pygame.font.SysFont(None, 36)
+                                upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (0, 255, 0))
+                                window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, 50))
+                                pygame.display.update()
+                                pygame.time.delay(500)  # Brief pause to show upgrade
+                                
+                                print(f"JUMP POWER: {player.JUMP_POWER:.1f} (Upgrade {jump_upgrades}/{settings['max_jump_upgrades']})")
+                            
+                            question_active = False
+                            break
+                
+                # Death check
+                if player.rect.y > death_threshold:
+                    game_over = True
+                
+                # Camera control - more aggressive tracking
+                target_offset_x = player.rect.x - SETTINGS["WIDTH"] // 3
+                target_offset_y = player.rect.y - SETTINGS["HEIGHT"] // 3
+                
+                # Smooth camera movement
+                offset_x += (target_offset_x - offset_x) * 0.1
+                offset_y += (target_offset_y - offset_y) * 0.1
+
+        draw(window, background, bg_image, player, objects, offset_x, offset_y)
+        
+        if game_over:
+            # Enhanced game over screen
+            overlay = pygame.Surface((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 200))
+            window.blit(overlay, (0, 0))
+            
+            font_large = pygame.font.SysFont(None, 72)
+            font_medium = pygame.font.SysFont(None, 48)
+            
+            game_over_text = font_large.render("GAME OVER", True, (255, 50, 50))
+            restart_text = font_medium.render("Press R to restart", True, (255, 255, 255))
+            stats_text = font_medium.render(f"Reached Jump Level: {jump_upgrades} (Power: {player.JUMP_POWER:.1f})", True, (200, 200, 255))
+            
+            window.blit(game_over_text, (SETTINGS["WIDTH"]//2 - game_over_text.get_width()//2, 
+                                       SETTINGS["HEIGHT"]//2 - 100))
+            window.blit(restart_text, (SETTINGS["WIDTH"]//2 - restart_text.get_width()//2, 
+                                     SETTINGS["HEIGHT"]//2))
+            window.blit(stats_text, (SETTINGS["WIDTH"]//2 - stats_text.get_width()//2, 
+                                   SETTINGS["HEIGHT"]//2 + 60))
+            
+            pygame.display.update()
 
 if __name__ == "__main__":
+    pygame.init()
+    window = pygame.display.set_mode((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]))
+    pygame.display.set_caption(SETTINGS["TITLE"])
     main(window)
 
