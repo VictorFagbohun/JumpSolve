@@ -361,8 +361,11 @@ def main(window):
 
                                     # Visual feedback
                                     font = pygame.font.SysFont(None, 36)
-                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (0, 255, 0))
-                                    window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, 50))
+                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))  # purple
+                                    window.blit(
+                                        upgrade_text,
+                                        (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50)
+                                    )
                                     pygame.display.update()
                                     pygame.time.delay(500)
 
