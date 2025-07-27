@@ -80,7 +80,7 @@ def menu_screen():
                     return "Easy"
                 elif medium_selection.collidepoint(event.pos):
                     pygame.mixer.music.stop()
-                    return "Medium Selection"
+                    return "Medium"
                 elif hard_selection.collidepoint(event.pos):
                     pygame.mixer.music.stop()
                     return "Hard"

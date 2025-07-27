@@ -235,31 +235,31 @@ def main(window):
     # Get difficulty from menu
     difficulty = menu_screen()
     
-    # Supercharged difficulty settings with exponential jump scaling
+    # Updated difficulty settings
     DIFFICULTY_SETTINGS = {
         "Easy": {
-            "gap_increase": 16,
-            "base_jump": 3.0,  # Strong initial jump
-            "jump_multiplier": 1.25,  # 25% increase per upgrade
+            "gap_increase": 8,           # Blocks closer together for Easy
+            "base_jump": 4.0,
+            "jump_multiplier": 1.2,      # Use old Medium settings
             "question_diff": "Easy",
-            "gravity": 0.7,  # Very floaty
-            "max_jump_upgrades": 10  # Cap to prevent absurd jumps
-        },
-        "Medium": {
-            "gap_increase": 24,
-            "base_jump": 2.5,
-            "jump_multiplier": 1.2,  # 20% increase
-            "question_diff": "Medium",
-            "gravity": 0.9,
+            "gravity": 0.7,
             "max_jump_upgrades": 12
         },
+        "Medium": {
+            "gap_increase": 12,          # Use old Easy settings
+            "base_jump": 3.0,
+            "jump_multiplier": 1.25,
+            "question_diff": "Medium",
+            "gravity": 0.7,
+            "max_jump_upgrades": 10
+        },
         "Hard": {
-            "gap_increase": 32,
-            "base_jump": 2.0,
-            "jump_multiplier": 1.15,  # 15% increase
+            "gap_increase": 18,          # Use old Medium settings
+            "base_jump": 3.0,
+            "jump_multiplier": 1.2,
             "question_diff": "Hard", 
-            "gravity": 1.1,
-            "max_jump_upgrades": 15
+            "gravity": 0.9,
+            "max_jump_upgrades": 12
         }
     }
     settings = DIFFICULTY_SETTINGS[difficulty]
@@ -282,7 +282,7 @@ def main(window):
     for i in range(GAME_SETTINGS[difficulty]):
         if i > 0 and i % question_every == 0:
             # Exponential gap growth
-            current_gap *= 1.15  # 15% wider each question platform
+            #current_gap *= 1.05  # 15% wider each question platform
             current_gap += settings["gap_increase"]  # Plus flat increase
             
         x = start_x + i * current_gap
@@ -321,41 +321,55 @@ def main(window):
                 if event.key == pygame.K_SPACE and not game_over and not question_active:
                     player.jump()
                 if event.key == pygame.K_r and game_over:
+                    from question import seen_ids
+                    seen_ids.clear()  # Reset seen_ids when restarting  
                     return main(window)
+
         
         if not game_over:
             if not question_active:
                 player.loop(SETTINGS["FPS"])
                 handle_movement(player, objects)
                 
-                # Check platform collisions
+                # Check platform collisions and trigger question after landing
                 for i, platform in enumerate(objects):
-                    if (player.rect.colliderect(pygame.Rect(
-                        platform.rect.x, platform.rect.y - 10, 
-                        platform.rect.width, 15))):
-                        
-                        if i >= next_question_idx:
-                            question_active = True
-                            next_question_idx += question_every
-                            
-                            # Supercharged jump upgrade system
-                            answered_correctly = questions(settings["question_diff"])
-                            if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
-                                jump_upgrades += 1
-                                # Exponential jump scaling
-                                player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
-                                
-                                # Visual feedback
-                                font = pygame.font.SysFont(None, 36)
-                                upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (0, 255, 0))
-                                window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, 50))
-                                pygame.display.update()
-                                pygame.time.delay(500)  # Brief pause to show upgrade
-                                
-                                print(f"JUMP POWER: {player.JUMP_POWER:.1f} (Upgrade {jump_upgrades}/{settings['max_jump_upgrades']})")
-                            
-                            question_active = False
-                            break
+                    # Check if player is landing on the platform
+                    if player.rect.bottom >= platform.rect.top and \
+                       player.rect.bottom <= platform.rect.top + 15 and \
+                       player.rect.right > platform.rect.left and \
+                       player.rect.left < platform.rect.right and \
+                       player.y_vel >= 0:
+
+                        player.landed()  # Ensure player lands
+
+                        # Check if player is centered on the block
+                        player_center_x = player.rect.centerx
+                        block_center_x = platform.rect.centerx
+                        block_half_width = platform.rect.width // 2
+
+                        # Only trigger question if player is within the middle 40% of the block
+                        if abs(player_center_x - block_center_x) < block_half_width * 0.4:
+                            if i >= next_question_idx:
+                                question_active = True
+                                next_question_idx += question_every
+
+                                # Supercharged jump upgrade system
+                                answered_correctly = questions(settings["question_diff"])
+                                if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
+                                    jump_upgrades += 1
+                                    player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
+
+                                    # Visual feedback
+                                    font = pygame.font.SysFont(None, 36)
+                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (0, 255, 0))
+                                    window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, 50))
+                                    pygame.display.update()
+                                    pygame.time.delay(500)
+
+                                    print(f"JUMP POWER: {player.JUMP_POWER:.1f} (Upgrade {jump_upgrades}/{settings['max_jump_upgrades']})")
+
+                                question_active = False
+                                break
                 
                 # Death check
                 if player.rect.y > death_threshold:

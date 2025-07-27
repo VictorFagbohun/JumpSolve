@@ -64,9 +64,10 @@ def questions(difficulty):
                     else:
                         img = None
 
-        if points == 3 or not current_question:
+        if points == 2 or not current_question:
             print("Congratulations")
-            break
+            return True
+         
 
         if img:
             screen.blit(img, [150, 0])
