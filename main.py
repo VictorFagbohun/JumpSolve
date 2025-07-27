@@ -256,7 +256,7 @@ def main(window):
         "Hard": {
             "gap_increase": 18,          # Use old Medium settings
             "base_jump": 3.0,
-            "jump_multiplier": 1.2,
+            "jump_multiplier": 1.5,
             "question_diff": "Hard", 
             "gravity": 0.9,
             "max_jump_upgrades": 12

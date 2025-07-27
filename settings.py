@@ -24,12 +24,12 @@ DIFFICULTY_SETTINGS = {
     },
     "Medium": {
         "gap_increase": 24,
-        "jump_increment": 0.5,
+        "jump_increment": 0.6,
         "question_diff": "Medium"
     },
     "Hard": {
-        "gap_increase": 32,
-        "jump_increment": 0.3,
+        "gap_increase": 28,
+        "jump_increment": 0.5,
         "question_diff": "Hard"
     }
 }
