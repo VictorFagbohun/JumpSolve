@@ -3,6 +3,7 @@ import pygame
 import os
 import random
 import math
+import asyncio
 from os import listdir
 from os.path import isfile, join
 from settings import PLAYER_SETTINGS, SETTINGS, GAME_SETTINGS
@@ -266,7 +267,7 @@ def show_end_screen(window, game_won, jump_upgrades, jump_power):
     pygame.display.update()
 
 
-def main(window):
+async def main(window):
     difficulty = menu_screen()
     
     DIFFICULTY_SETTINGS = {
@@ -350,7 +351,7 @@ def main(window):
     next_question_idx = question_every
 
     while True:
-        clock.tick(SETTINGS["FPS"])
+        await asyncio.sleep(0)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -435,5 +436,5 @@ if __name__ == "__main__":
     pygame.init()
     window = pygame.display.set_mode((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]))
     pygame.display.set_caption(SETTINGS["TITLE"])
-    main(window)
+    asyncio.run(main(window))
 
