@@ -64,6 +64,10 @@ easy_rect = easy_text.get_rect(center=easy_selection.center)
 medium_rect = medium_text.get_rect(center=medium_selection.center)
 hard_rect = hard_text.get_rect(center=hard_selection.center)
 
+logo = pygame.image.load("assets/background/jumpsolve.png")
+logo = pygame.transform.scale(logo, (800, 100))
+logo_rect = logo.get_rect(center=(800 // 2, 600-70 ))
+
 def menu_screen():
     pygame.mixer.init()
     pygame.mixer.music.load("music/menu_background_music.mp3")  # Use your exported EarSketch file
@@ -88,6 +92,7 @@ def menu_screen():
         for tile in background:
             screen.blit(bg_image, tile)
         #Text Display
+        screen.blit(logo, logo_rect)
         screen.blit(menu_text, menu_rect)
         screen.blit(difficulty_text, difficulty_rect)
     
