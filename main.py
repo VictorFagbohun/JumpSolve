@@ -157,6 +157,19 @@ class Object(pygame.sprite.Sprite):
 
     def draw(self, win, offset_x, offset_y):
         win.blit(self.image, (self.rect.x - offset_x, self.rect.y - offset_y))
+        
+class Flag(Object):
+    def __init__(self, x, y, size):
+        super().__init__(x, y, size, size)
+        path = join("assets", "Environment", "flag.png")
+        flag_img = pygame.image.load(path).convert_alpha()
+        flag_img = pygame.transform.scale2x(flag_img)
+        
+        # Calculate vertical offset to raise flag
+        y_offset = -size // 2  # Move image up half a block
+        self.image.blit(flag_img, (0, y_offset))  # Shift image upward
+
+        self.mask = pygame.mask.from_surface(self.image)
 
 class Block(Object):
     def __init__(self,x,y,size):
@@ -229,24 +242,44 @@ def handle_movement(player, objects):
 
     handle_vertical_collision(player, objects, player.y_vel)
 
-    
+def show_end_screen(window, game_won, jump_upgrades, jump_power):
+    overlay = pygame.Surface((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 200))
+    window.blit(overlay, (0, 0))
+
+    font_large = pygame.font.SysFont(None, 72)
+    font_medium = pygame.font.SysFont(None, 48)
+
+    if game_won:
+        title_text = font_large.render("YOU WIN!", True, (50, 255, 100))
+        stats_text = font_medium.render(f"Final Jump Power: {jump_power:.1f}", True, (200, 255, 200))
+    else:
+        title_text = font_large.render("GAME OVER", True, (255, 50, 50))
+        stats_text = font_medium.render(f"Reached Jump Level: {jump_upgrades} (Power: {jump_power:.1f})", True, (200, 200, 255))
+
+    restart_text = font_medium.render("Press R to restart", True, (255, 255, 255))
+
+    window.blit(title_text, (SETTINGS["WIDTH"]//2 - title_text.get_width()//2, SETTINGS["HEIGHT"]//2 - 100))
+    window.blit(restart_text, (SETTINGS["WIDTH"]//2 - restart_text.get_width()//2, SETTINGS["HEIGHT"]//2))
+    window.blit(stats_text, (SETTINGS["WIDTH"]//2 - stats_text.get_width()//2, SETTINGS["HEIGHT"]//2 + 60))
+
+    pygame.display.update()
+
 
 def main(window):
-    # Get difficulty from menu
     difficulty = menu_screen()
     
-    # Updated difficulty settings
     DIFFICULTY_SETTINGS = {
         "Easy": {
-            "gap_increase": 8,           # Blocks closer together for Easy
+            "gap_increase": 8,
             "base_jump": 4.0,
-            "jump_multiplier": 1.2,      # Use old Medium settings
+            "jump_multiplier": 1.2,
             "question_diff": "Easy",
             "gravity": 0.7,
             "max_jump_upgrades": 12
         },
         "Medium": {
-            "gap_increase": 12,          # Use old Easy settings
+            "gap_increase": 12,
             "base_jump": 3.0,
             "jump_multiplier": 1.25,
             "question_diff": "Medium",
@@ -254,7 +287,7 @@ def main(window):
             "max_jump_upgrades": 10
         },
         "Hard": {
-            "gap_increase": 18,          # Use old Medium settings
+            "gap_increase": 18,
             "base_jump": 3.0,
             "jump_multiplier": 1.5,
             "question_diff": "Hard", 
@@ -264,7 +297,6 @@ def main(window):
     }
     settings = DIFFICULTY_SETTINGS[difficulty]
 
-    # Game initialization
     pygame.mixer.music.load("music/game.mp3")
     pygame.mixer.music.play(-1)
 
@@ -278,18 +310,27 @@ def main(window):
     current_gap = block_size * 2
     question_every = 3
 
-    # Generate platforms with exponential gap scaling
     for i in range(GAME_SETTINGS[difficulty]):
         if i > 0 and i % question_every == 0:
-            # Exponential gap growth
-            #current_gap *= 1.05  # 15% wider each question platform
-            current_gap += settings["gap_increase"]  # Plus flat increase
-            
+            current_gap += settings["gap_increase"]
         x = start_x + i * current_gap
         y = start_y - i * (block_size * 0.8)
         objects.append(Block(x, y, block_size))
 
-    # Player setup with supercharged jump system
+    # Add 3-block goal platform
+    goal_blocks = []
+    goal_x = start_x + GAME_SETTINGS[difficulty] * current_gap + 200
+    goal_y = start_y - GAME_SETTINGS[difficulty] * (block_size * 0.8)
+    for i in range(-1, 2):
+        block = Block(goal_x + i * block_size, goal_y, block_size)
+        block.name = "goal"
+        objects.append(block)
+        goal_blocks.append(block)
+
+    flag = Flag(goal_x, goal_y - block_size, block_size)  # On top of middle block
+    objects.append(flag)
+
+    # Player setup
     first_platform = objects[0]
     player = Player(
         first_platform.rect.x + (first_platform.width // 2) - 32,
@@ -299,14 +340,12 @@ def main(window):
     player.GRAVITY = settings["gravity"]
     player.JUMP_POWER = settings["base_jump"]
     jump_upgrades = 0
-    
-    # Game state
+
     offset_x = 0
     offset_y = 0
-    scroll_area_width = SETTINGS["WIDTH"] // 3  # More responsive camera
-    scroll_area_height = SETTINGS["HEIGHT"] // 3
-    death_threshold = SETTINGS["HEIGHT"] + 300  # More forgiving death boundary
+    death_threshold = SETTINGS["HEIGHT"] + 300
     game_over = False
+    game_won = False
     question_active = False
     next_question_idx = question_every
 
@@ -322,50 +361,53 @@ def main(window):
                     player.jump()
                 if event.key == pygame.K_r and game_over:
                     from question import seen_ids
-                    seen_ids.clear()  # Reset seen_ids when restarting  
+                    seen_ids.clear()
                     return main(window)
 
-        
         if not game_over:
             if not question_active:
                 player.loop(SETTINGS["FPS"])
                 handle_movement(player, objects)
-                
-                # Check platform collisions and trigger question after landing
+
+                # Win check
+                for block in goal_blocks:
+                    if block.rect.colliderect(player.rect):
+                        game_over = True
+                        game_won = True
+                        break
+
+                # Win if player touches the flag
+                if player.rect.colliderect(flag.rect):
+                    game_over = True
+                    game_won = True
+
+
+                # Platform + question logic
                 for i, platform in enumerate(objects):
-                    # Check if player is landing on the platform
                     if player.rect.bottom >= platform.rect.top and \
                        player.rect.bottom <= platform.rect.top + 15 and \
                        player.rect.right > platform.rect.left and \
                        player.rect.left < platform.rect.right and \
                        player.y_vel >= 0:
 
-                        player.landed()  # Ensure player lands
-
-                        # Check if player is centered on the block
+                        player.landed()
                         player_center_x = player.rect.centerx
                         block_center_x = platform.rect.centerx
                         block_half_width = platform.rect.width // 2
 
-                        # Only trigger question if player is within the middle 40% of the block
                         if abs(player_center_x - block_center_x) < block_half_width * 0.4:
                             if i >= next_question_idx:
                                 question_active = True
                                 next_question_idx += question_every
 
-                                # Supercharged jump upgrade system
                                 answered_correctly = questions(settings["question_diff"])
                                 if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
                                     jump_upgrades += 1
                                     player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
 
-                                    # Visual feedback
                                     font = pygame.font.SysFont(None, 36)
-                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))  # purple
-                                    window.blit(
-                                        upgrade_text,
-                                        (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50)
-                                    )
+                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))
+                                    window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50))
                                     pygame.display.update()
                                     pygame.time.delay(500)
 
@@ -373,42 +415,21 @@ def main(window):
 
                                 question_active = False
                                 break
-                
-                # Death check
+
                 if player.rect.y > death_threshold:
                     game_over = True
-                
-                # Camera control - more aggressive tracking
+
                 target_offset_x = player.rect.x - SETTINGS["WIDTH"] // 3
                 target_offset_y = player.rect.y - SETTINGS["HEIGHT"] // 3
-                
-                # Smooth camera movement
                 offset_x += (target_offset_x - offset_x) * 0.1
                 offset_y += (target_offset_y - offset_y) * 0.1
 
         draw(window, background, bg_image, player, objects, offset_x, offset_y)
-        
+
         if game_over:
-            # Enhanced game over screen
-            overlay = pygame.Surface((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 200))
-            window.blit(overlay, (0, 0))
-            
-            font_large = pygame.font.SysFont(None, 72)
-            font_medium = pygame.font.SysFont(None, 48)
-            
-            game_over_text = font_large.render("GAME OVER", True, (255, 50, 50))
-            restart_text = font_medium.render("Press R to restart", True, (255, 255, 255))
-            stats_text = font_medium.render(f"Reached Jump Level: {jump_upgrades} (Power: {player.JUMP_POWER:.1f})", True, (200, 200, 255))
-            
-            window.blit(game_over_text, (SETTINGS["WIDTH"]//2 - game_over_text.get_width()//2, 
-                                       SETTINGS["HEIGHT"]//2 - 100))
-            window.blit(restart_text, (SETTINGS["WIDTH"]//2 - restart_text.get_width()//2, 
-                                     SETTINGS["HEIGHT"]//2))
-            window.blit(stats_text, (SETTINGS["WIDTH"]//2 - stats_text.get_width()//2, 
-                                   SETTINGS["HEIGHT"]//2 + 60))
-            
-            pygame.display.update()
+            show_end_screen(window, game_won, jump_upgrades, player.JUMP_POWER)
+
+
 
 if __name__ == "__main__":
     pygame.init()
