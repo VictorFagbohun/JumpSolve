@@ -97,13 +97,13 @@ def menu_screen():
         screen.blit(difficulty_text, difficulty_rect)
     
         #Selection Display with rounded corners and centered text
-        pygame.draw.rect(screen, "blue", easy_selection, border_radius=30)
+        pygame.draw.rect(screen, "green", easy_selection, border_radius=30)
         screen.blit(easy_text, easy_rect)
         
-        pygame.draw.rect(screen, "red", medium_selection, border_radius=30)
+        pygame.draw.rect(screen, "blue", medium_selection, border_radius=30)
         screen.blit(medium_text, medium_rect)
         
-        pygame.draw.rect(screen, "green", hard_selection, border_radius=30)
+        pygame.draw.rect(screen, "red", hard_selection, border_radius=30)
         screen.blit(hard_text, hard_rect)
         
         pygame.display.update()

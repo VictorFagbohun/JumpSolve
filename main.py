@@ -351,7 +351,7 @@ async def main(window):
     next_question_idx = question_every
 
     while True:
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.01)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
