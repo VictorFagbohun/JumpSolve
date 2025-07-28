@@ -267,7 +267,7 @@ def show_end_screen(window, game_won, jump_upgrades, jump_power):
     pygame.display.update()
 
 
-async def main(window):
+def main(window):
     difficulty = menu_screen()
     
     DIFFICULTY_SETTINGS = {
@@ -351,7 +351,7 @@ async def main(window):
     next_question_idx = question_every
 
     while True:
-        await asyncio.sleep(0.01)
+        clock.tick(SETTINGS["FPS"])
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -381,7 +381,6 @@ async def main(window):
                 if player.rect.colliderect(flag.rect):
                     game_over = True
                     game_won = True
-
 
                 # Platform + question logic
                 for i, platform in enumerate(objects):
@@ -429,7 +428,6 @@ async def main(window):
 
         if game_over:
             show_end_screen(window, game_won, jump_upgrades, player.JUMP_POWER)
-
 
 
 if __name__ == "__main__":
