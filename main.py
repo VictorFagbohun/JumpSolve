@@ -266,173 +266,176 @@ def show_end_screen(window, game_won, jump_upgrades, jump_power):
 
     pygame.display.update()
 
-
-def main(window):
-    difficulty = menu_screen()
-    
-    DIFFICULTY_SETTINGS = {
-        "Easy": {
-            "gap_increase": 8,
-            "base_jump": 4.0,
-            "jump_multiplier": 1.2,
-            "question_diff": "Easy",
-            "gravity": 0.7,
-            "max_jump_upgrades": 12
-        },
-        "Medium": {
-            "gap_increase": 12,
-            "base_jump": 3.0,
-            "jump_multiplier": 1.25,
-            "question_diff": "Medium",
-            "gravity": 0.7,
-            "max_jump_upgrades": 10
-        },
-        "Hard": {
-            "gap_increase": 18,
-            "base_jump": 3.0,
-            "jump_multiplier": 1.5,
-            "question_diff": "Hard", 
-            "gravity": 0.9,
-            "max_jump_upgrades": 12
-        }
-    }
-    settings = DIFFICULTY_SETTINGS[difficulty]
-
-    pygame.mixer.music.load("music/game.mp3")
-    pygame.mixer.music.play(-1)
-
-    clock = pygame.time.Clock()
-    background, bg_image = get_background("Gray.png")
-
-    block_size = 64
-    objects = []
-    start_x = 100
-    start_y = SETTINGS["HEIGHT"] - block_size * 2
-    current_gap = block_size * 2
-    question_every = 3
-
-    for i in range(GAME_SETTINGS[difficulty]):
-        if i > 0 and i % question_every == 0:
-            current_gap += settings["gap_increase"]
-        x = start_x + i * current_gap
-        y = start_y - i * (block_size * 0.8)
-        objects.append(Block(x, y, block_size))
-
-    # Add 3-block goal platform
-    goal_blocks = []
-    goal_x = start_x + GAME_SETTINGS[difficulty] * current_gap + 200
-    goal_y = start_y - GAME_SETTINGS[difficulty] * (block_size * 0.8)
-    for i in range(-1, 2):
-        block = Block(goal_x + i * block_size, goal_y, block_size)
-        block.name = "goal"
-        objects.append(block)
-        goal_blocks.append(block)
-
-    flag = Flag(goal_x, goal_y - block_size, block_size)  # On top of middle block
-    objects.append(flag)
-
-    # Player setup
-    first_platform = objects[0]
-    player = Player(
-        first_platform.rect.x + (first_platform.width // 2) - 32,
-        first_platform.rect.y - 64,
-        64, 64
-    )
-    player.GRAVITY = settings["gravity"]
-    player.JUMP_POWER = settings["base_jump"]
-    jump_upgrades = 0
-
-    offset_x = 0
-    offset_y = 0
-    death_threshold = SETTINGS["HEIGHT"] + 300
-    game_over = False
-    game_won = False
-    question_active = False
-    next_question_idx = question_every
-
-    while True:
-        clock.tick(SETTINGS["FPS"])
+async def main():
+    def main(window):
+        difficulty = menu_screen()
         
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and not game_over and not question_active:
-                    player.jump()
-                if event.key == pygame.K_r and game_over:
-                    from question import seen_ids
-                    seen_ids.clear()
-                    return main(window)
+        DIFFICULTY_SETTINGS = {
+            "Easy": {
+                "gap_increase": 8,
+                "base_jump": 4.0,
+                "jump_multiplier": 1.2,
+                "question_diff": "Easy",
+                "gravity": 0.7,
+                "max_jump_upgrades": 12
+            },
+            "Medium": {
+                "gap_increase": 12,
+                "base_jump": 3.5,
+                "jump_multiplier": 1.25,
+                "question_diff": "Medium",
+                "gravity": 0.8,
+                "max_jump_upgrades": 14
+            },
+            "Hard": {
+                "gap_increase": 16,
+                "base_jump": 3.0,
+                "jump_multiplier": 1.5,
+                "question_diff": "Hard", 
+                "gravity": 0.8,
+                "max_jump_upgrades": 20
+            }
+        }
+        settings = DIFFICULTY_SETTINGS[difficulty]
 
-        if not game_over:
-            if not question_active:
-                player.loop(SETTINGS["FPS"])
-                handle_movement(player, objects)
+        pygame.mixer.music.load("music/game.mp3")
+        pygame.mixer.music.play(-1)
 
-                # Win check
-                for block in goal_blocks:
-                    if block.rect.colliderect(player.rect):
+        clock = pygame.time.Clock()
+        background, bg_image = get_background("Gray.png")
+
+        block_size = 64
+        objects = []
+        start_x = 100
+        start_y = SETTINGS["HEIGHT"] - block_size * 2
+        current_gap = block_size * 2
+        question_every = 3
+
+        for i in range(GAME_SETTINGS[difficulty]):
+            if i > 0 and i % question_every == 0:
+                current_gap += settings["gap_increase"]
+            x = start_x + i * current_gap
+            y = start_y - i * (block_size * 0.8)
+            objects.append(Block(x, y, block_size))
+
+        # Add 3-block goal platform
+        goal_blocks = []
+        goal_x = start_x + GAME_SETTINGS[difficulty] * current_gap + 200
+        goal_y = start_y - GAME_SETTINGS[difficulty] * (block_size * 0.8)
+        for i in range(-1, 2):
+            block = Block(goal_x + i * block_size, goal_y, block_size)
+            block.name = "goal"
+            objects.append(block)
+            goal_blocks.append(block)
+
+        flag = Flag(goal_x, goal_y - block_size, block_size)  # On top of middle block
+        objects.append(flag)
+
+        # Player setup
+        first_platform = objects[0]
+        player = Player(
+            first_platform.rect.x + (first_platform.width // 2) - 32,
+            first_platform.rect.y - 64,
+            64, 64
+        )
+        player.GRAVITY = settings["gravity"]
+        player.JUMP_POWER = settings["base_jump"]
+        jump_upgrades = 0
+
+        offset_x = 0
+        offset_y = 0
+        death_threshold = SETTINGS["HEIGHT"] + 300
+        game_over = False
+        game_won = False
+        question_active = False
+        next_question_idx = question_every
+
+        while True:
+            clock.tick(SETTINGS["FPS"])
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE and not game_over and not question_active:
+                        player.jump()
+                    if event.key == pygame.K_r and game_over:
+                        from question import seen_ids
+                        seen_ids.clear()
+                        return main(window)
+
+            if not game_over:
+                if not question_active:
+                    player.loop(SETTINGS["FPS"])
+                    handle_movement(player, objects)
+
+                    # Win check
+                    for block in goal_blocks:
+                        if block.rect.colliderect(player.rect):
+                            game_over = True
+                            game_won = True
+                            break
+
+                    # Win if player touches the flag
+                    if player.rect.colliderect(flag.rect):
                         game_over = True
                         game_won = True
-                        break
 
-                # Win if player touches the flag
-                if player.rect.colliderect(flag.rect):
-                    game_over = True
-                    game_won = True
+                    # Platform + question logic
+                    for i, platform in enumerate(objects):
+                        if player.rect.bottom >= platform.rect.top and \
+                        player.rect.bottom <= platform.rect.top + 15 and \
+                        player.rect.right > platform.rect.left and \
+                        player.rect.left < platform.rect.right and \
+                        player.y_vel >= 0:
 
-                # Platform + question logic
-                for i, platform in enumerate(objects):
-                    if player.rect.bottom >= platform.rect.top and \
-                       player.rect.bottom <= platform.rect.top + 15 and \
-                       player.rect.right > platform.rect.left and \
-                       player.rect.left < platform.rect.right and \
-                       player.y_vel >= 0:
+                            player.landed()
+                            player_center_x = player.rect.centerx
+                            block_center_x = platform.rect.centerx
+                            block_half_width = platform.rect.width // 2
 
-                        player.landed()
-                        player_center_x = player.rect.centerx
-                        block_center_x = platform.rect.centerx
-                        block_half_width = platform.rect.width // 2
+                            if abs(player_center_x - block_center_x) < block_half_width * 0.4:
+                                if i >= next_question_idx:
+                                    question_active = True
+                                    next_question_idx += question_every
+                                
+                                    answered_correctly = questions(settings["question_diff"])
+                                    if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
+                                        jump_upgrades += 1
+                                        player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
 
-                        if abs(player_center_x - block_center_x) < block_half_width * 0.4:
-                            if i >= next_question_idx:
-                                question_active = True
-                                next_question_idx += question_every
+                                        font = pygame.font.SysFont(None, 36)
+                                        upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))
+                                        window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50))
+                                        pygame.display.update()
+                                        pygame.time.delay(500)
 
-                                answered_correctly = questions(settings["question_diff"])
-                                if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
-                                    jump_upgrades += 1
-                                    player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
+                                        print(f"JUMP POWER: {player.JUMP_POWER:.1f} (Upgrade {jump_upgrades}/{settings['max_jump_upgrades']})")
 
-                                    font = pygame.font.SysFont(None, 36)
-                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))
-                                    window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50))
-                                    pygame.display.update()
-                                    pygame.time.delay(500)
+                                    question_active = False
+                                    break
 
-                                    print(f"JUMP POWER: {player.JUMP_POWER:.1f} (Upgrade {jump_upgrades}/{settings['max_jump_upgrades']})")
+                    if player.rect.y > death_threshold:
+                        game_over = True
 
-                                question_active = False
-                                break
+                    target_offset_x = player.rect.x - SETTINGS["WIDTH"] // 3
+                    target_offset_y = player.rect.y - SETTINGS["HEIGHT"] // 3
+                    offset_x += (target_offset_x - offset_x) * 0.1
+                    offset_y += (target_offset_y - offset_y) * 0.1
 
-                if player.rect.y > death_threshold:
-                    game_over = True
+            draw(window, background, bg_image, player, objects, offset_x, offset_y)
 
-                target_offset_x = player.rect.x - SETTINGS["WIDTH"] // 3
-                target_offset_y = player.rect.y - SETTINGS["HEIGHT"] // 3
-                offset_x += (target_offset_x - offset_x) * 0.1
-                offset_y += (target_offset_y - offset_y) * 0.1
-
-        draw(window, background, bg_image, player, objects, offset_x, offset_y)
-
-        if game_over:
-            show_end_screen(window, game_won, jump_upgrades, player.JUMP_POWER)
+            if game_over:
+                show_end_screen(window, game_won, jump_upgrades, player.JUMP_POWER)
 
 
-if __name__ == "__main__":
-    pygame.init()
-    window = pygame.display.set_mode((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]))
-    pygame.display.set_caption(SETTINGS["TITLE"])
-    asyncio.run(main(window))
+    if __name__ == "__main__":
+        pygame.init()
+        window = pygame.display.set_mode((SETTINGS["WIDTH"], SETTINGS["HEIGHT"]))
+        pygame.display.set_caption(SETTINGS["TITLE"])
+        asyncio.run(main(window))
+    await asyncio.sleep(0)
+
+asyncio.run(main())
 

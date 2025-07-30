@@ -45,6 +45,7 @@ def questions(difficulty):
     current_question = random_unseen_question()
     if current_question:
         img = pygame.image.load(current_question["image"])
+    
     else:
         img = None
 
@@ -58,16 +59,16 @@ def questions(difficulty):
                 if event.unicode.upper() == current_question["answer"]:
                     print("Correct Answer")
                     points += 1
+                    if points == 2:
+                        print("Congratulations")
+                        return True
                     current_question = random_unseen_question()
                     if current_question:
                         img = pygame.image.load(current_question["image"])
                     else:
                         img = None
-
-        if points == 2 or not current_question:
-            print("Congratulations")
-            return True
-         
+                        print("Congratulations")
+                        return True
 
         if img:
             screen.blit(img, [150, 0])

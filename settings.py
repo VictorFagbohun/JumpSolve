@@ -12,8 +12,8 @@ PLAYER_SETTINGS = {
 
 GAME_SETTINGS = {
     "Easy": 15,
-    "Medium": 25,
-    "Hard": 40
+    "Medium": 15,
+    "Hard": 15
 }
 
 DIFFICULTY_SETTINGS = {
