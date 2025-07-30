@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import json
+import asyncio
 
 pygame.init()
 pygame.display.set_caption('JumpSolve Menu')
@@ -15,7 +16,7 @@ def load_questions_json(filename):
 
 seen_ids = []
 
-def questions(difficulty):
+async def questions(difficulty):
     global seen_ids
     points = 0
 
@@ -74,3 +75,6 @@ def questions(difficulty):
             screen.blit(img, [150, 0])
         pygame.display.update()
         clock.tick(60)
+        
+        # Yield control to asyncio event loop
+        await asyncio.sleep(0)

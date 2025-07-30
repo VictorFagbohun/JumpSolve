@@ -1,0 +1,40 @@
+[pygbag]
+# Main entry point
+main = "main.py"
+
+# App name and version
+app-name = "JumpSolve"
+app-version = "1.0.0"
+
+# HTML template settings
+html = "index.html"
+template = "default"
+
+# Build settings
+build-dir = "build"
+cache-dir = ".pygbag"
+
+# Development server settings
+host = "localhost"
+port = 8000
+bind = "127.0.0.1"
+
+# Additional files to include
+include = [
+    "assets/**/*",
+    "json/**/*",
+    "music/**/*",
+    "QuestionBank/**/*"
+]
+
+# Exclude patterns
+exclude = [
+    "*.pyc",
+    "__pycache__",
+    ".git",
+    ".gitignore"
+]
+
+# Web settings
+title = "JumpSolve - Math Platformer"
+description = "A fun platformer game where you solve math problems to upgrade your jump power!" 

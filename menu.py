@@ -1,5 +1,6 @@
 import pygame
 import sys 
+import asyncio
 from os.path import isfile, join
 
 pygame.init()
@@ -68,7 +69,7 @@ logo = pygame.image.load("assets/background/jumpsolve.png")
 logo = pygame.transform.scale(logo, (800, 100))
 logo_rect = logo.get_rect(center=(800 // 2, 600-70 ))
 
-def menu_screen():
+async def menu_screen():
     pygame.mixer.init()
     pygame.mixer.music.load("music/menu_background_music.mp3")  # Use your exported EarSketch file
     pygame.mixer.music.play(-1)  # Loop the music
@@ -108,3 +109,6 @@ def menu_screen():
         
         pygame.display.update()
         clock.tick(60)
+        
+        # Yield control to asyncio event loop
+        await asyncio.sleep(0)
