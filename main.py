@@ -292,7 +292,7 @@ async def game_loop(window):
             "jump_multiplier": 1.5,
             "question_diff": "Hard", 
             "gravity": 0.8,
-            "max_jump_upgrades": 20
+            "max_jump_upgrades": 4
         }
     }
     settings = DIFFICULTY_SETTINGS[difficulty]
@@ -303,6 +303,7 @@ async def game_loop(window):
     clock = pygame.time.Clock()
     background, bg_image = get_background("Gray.png")
 
+   
     block_size = 64
     objects = []
     start_x = 100
@@ -403,9 +404,10 @@ async def game_loop(window):
                                 if answered_correctly and jump_upgrades < settings["max_jump_upgrades"]:
                                     jump_upgrades += 1
                                     player.JUMP_POWER = settings["base_jump"] * (settings["jump_multiplier"] ** jump_upgrades)
+                                    upgrade_msg = f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})"
 
                                     font = pygame.font.SysFont(None, 36)
-                                    upgrade_text = font.render(f"JUMP UPGRADE! ({player.JUMP_POWER:.1f})", True, (160, 32, 240))
+                                    upgrade_text = font.render(upgrade_msg, True, (160, 32, 240))
                                     window.blit(upgrade_text, (SETTINGS["WIDTH"]//2 - upgrade_text.get_width()//2, SETTINGS["HEIGHT"] - upgrade_text.get_height() - 50))
                                     pygame.display.update()
                                     await asyncio.sleep(0.5)

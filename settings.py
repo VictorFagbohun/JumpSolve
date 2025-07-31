@@ -12,8 +12,8 @@ PLAYER_SETTINGS = {
 
 GAME_SETTINGS = {
     "Easy": 15,
-    "Medium": 15,
-    "Hard": 15
+    "Medium": 18,
+    "Hard": 21
 }
 
 DIFFICULTY_SETTINGS = {
@@ -28,7 +28,7 @@ DIFFICULTY_SETTINGS = {
         "question_diff": "Medium"
     },
     "Hard": {
-        "gap_increase": 28,
+        "gap_increase": 24,
         "jump_increment": 0.5,
         "question_diff": "Hard"
     }

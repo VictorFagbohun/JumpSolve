@@ -60,7 +60,14 @@ async def questions(difficulty):
                 if event.unicode.upper() == current_question["answer"]:
                     print("Correct Answer")
                     points += 1
-                    if points == 2:
+                    
+                    # Show "Correct!" message briefly
+                    correct_text = word_font.render("Correct!", True, (0, 255, 0))
+                    screen.blit(correct_text, (screen.get_width()//2 - correct_text.get_width()//2, screen.get_height()//2 - correct_text.get_height()//2))
+                    pygame.display.update()
+                    await asyncio.sleep(1)  # Show message for 1 second
+                    
+                    if points == 1:
                         print("Congratulations")
                         return True
                     current_question = random_unseen_question()
